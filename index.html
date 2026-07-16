@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Randomized Exam</title>
+<style>
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        margin: 20px;
+        line-height: 1.45;
+    }
+
+    div.question {
+        margin-bottom: 28px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    label {
+        display: block;
+        cursor: pointer;
+        margin: 4px 0;
+    }
+
+    img.question-image {
+        max-width: 100%;
+        height: auto;
+        margin-top: 10px;
+    }
+
+    .correct {
+        color: green;
+        font-weight: bold;
+    }
+
+    .incorrect {
+        color: red;
+        font-weight: bold;
+    }
+
+    .result {
+        margin-top: 30px;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .explanation-box {
+        margin-top: 12px;
+        padding: 12px;
+        border-left: 5px solid #1976d2;
+        background: #eef6ff;
+        border-radius: 4px;
+        font-size: 15px;
+    }
+
+    .answer-title {
+        font-weight: bold;
+        color: #1565c0;
+        margin-bottom: 6px;
+    }
+
+    .reference {
+        margin-top: 8px;
+        font-style: italic;
+        color: #555;
+        font-size: 14px;
+    }
+</style>
+</head>
+<body>
+    <h1>Exam</h1>
+    <form id="exam-form">
+        <!-- Questions will be generated here -->
+    </form>
+    <button type="button" onclick="submitExam()">Submit Exam</button>
+    <div id="result" class="result"></div>
+
+    <script>
+        let currentQuestions = [];
+
+        const allQuestions = [
+            // Include your questions here
+            // Example question format shown below
+{
+    text: "Which statement best describes the steps for turning right at a red traffic light?",
+    answers: [
+        { text: "Right turns on a red traffic light are never permitted", letter: "a" },
+        { text: "Signal and make sure there is no sign prohibiting the turn, stop, look left and right, yield the right-of-way, then proceed", letter: "b" },
+        { text: "Reduce speed before the turn, look right for cyclists, signal and proceed", letter: "c" },
+        { text: "Signal and reduce speed before the turn, look left, yield to vehicles and proceed", letter: "d" }
+    ],
+    correctAnswer: "b",
+    explanation: "In Alberta, a right turn on a red traffic light is permitted unless a sign prohibits it. The driver must come to a complete stop, check for pedestrians and traffic, yield the right-of-way, and proceed only when it is safe.",
+    reference: "Alberta Driver's Guide – Traffic Control Lights."
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "Route for vehicles over 4500 kg", letter: "a" },
+        { text: "Route for slow moving vehicles", letter: "b" },
+        { text: "Reserved lane for buses", letter: "c" },
+        { text: "Dangerous goods route", letter: "d" }
+    ],
+    correctAnswer: "d",
+    image: "dg.png"
+},
+{
+    text: "Unless otherwise posted, what is the basic speed limit outside a city, town or village on a primary highway?",
+    answers: [
+        { text: "100 km/h", letter: "a" },
+        { text: "90 km/h", letter: "b" },
+        { text: "110 km/h", letter: "c" },
+        { text: "80 km/h", letter: "d" }
+    ],
+    correctAnswer: "a",
+    explanation: "Unless another speed limit is posted, the maximum basic speed limit on a primary highway outside an urban area such as a city, town or village is 100 km/h.",
+    reference: "Alberta Driver's Guide – Speed Limits."
+},
+{
+    text: "When backing a passenger vehicle to the left, a driver should:",
+    answers: [
+        { text: "Look in the inside rear-view mirror and make steering adjustments as necessary", letter: "a" },
+        { text: "Look over the right shoulder with occasional glances to the front", letter: "b" },
+        { text: "Look over the left shoulder with occasional glances to the front", letter: "c" },
+        { text: "Without shoulder checking, use the inside and outside rear-view mirrors to ensure the best view to the rear and both sides of the vehicle", letter: "d" }
+    ],
+    correctAnswer: "c",
+    explanation: "When backing to the left, drivers should look over their left shoulder through the rear window while occasionally checking around the vehicle to maintain awareness.",
+    reference: "Alberta Driver's Guide – Backing."
+},
+{
+    text: "When approaching an intersection and facing a traffic control light that is showing a green right-turn arrow and a red light, a driver:",
+    answers: [
+        { text: "Must stop and wait for a green light before turning in the direction of the arrow", letter: "a" },
+        { text: "May go straight through the intersection without stopping", letter: "b" },
+        { text: "May proceed when safe, without stopping, in the direction of the arrow", letter: "c" },
+        { text: "May turn left without stopping", letter: "d" }
+    ],
+    correctAnswer: "c",
+    explanation: "A green arrow provides a protected movement. A driver may proceed in the direction shown by the arrow when it is safe, even if another traffic light facing them is red.",
+    reference: "Alberta Driver's Guide – Traffic Control Signals."
+},
+{
+    text: "Alberta has a demerit point system where a fully licenced (non-learner, non-probationary) driver is suspended when they accumulate:",
+    answers: [
+        { text: "15 points", letter: "a" },
+        { text: "8 points", letter: "b" },
+        { text: "5 points", letter: "c" },
+        { text: "12 points", letter: "d" }
+    ],
+    correctAnswer: "a",
+    explanation: "A fully licensed Alberta driver receives a licence suspension when they accumulate 15 or more demerit points within a two-year period.",
+    reference: "Alberta Driver's Guide – Demerit Points."
+},
+{
+    text: "When passing a large truck on a two-way highway, a driver should:",
+    answers: [
+        { text: "Leave extra room before returning to their lane", letter: "a" },
+        { text: "Return to their lane when signalled by the truck’s headlights", letter: "b" },
+        { text: "Return to their lane when the truck is no longer visible in any of their rear-view mirrors", letter: "c" },
+        { text: "Return to their lane once they have cleared the truck’s front bumper", letter: "d" }
+    ],
+    correctAnswer: "a",
+    explanation: "Large trucks require more space because they are longer and need additional room to stop. Drivers should leave extra space before returning to the lane ahead of the truck.",
+    reference: "Alberta Driver's Guide – Sharing the Road with Other Vehicles."
+},
+{
+    text: "A single solid white line between driving lanes in an urban area means:",
+    answers: [
+        { text: "It is a line separating traffic travelling in opposite directions", letter: "a" },
+        { text: "Traffic on the right is moving faster than traffic on the left", letter: "b" },
+        { text: "Lane changing is not permitted", letter: "c" },
+        { text: "Lane change is permitted", letter: "d" }
+    ],
+    correctAnswer: "c",
+    explanation: "A solid white line separating lanes means lane changes are not permitted. Drivers should remain in their lane until the line changes or a legal lane change is allowed.",
+    reference: "Alberta Driver's Guide – Pavement Markings."
+},
+{
+    text: "A “parking lane” as defined in the Basic Licence Driver’s Handbook is:",
+    answers: [
+        { text: "A lane closest to the curb, where parking is permitted but there are no meters", letter: "a" },
+        { text: "All of these responses are correct", letter: "b" },
+        { text: "That portion of a primary highway between the edge of the roadway to the right of the direction of traffic and the nearest solid white line, not being the centre line, marked on the roadway", letter: "c" },
+        { text: "A lane immediately beside a row of parking meters in an urban area", letter: "d" }
+    ],
+    correctAnswer: "c",
+    explanation: "A parking lane is the portion of a primary highway between the roadway edge and the nearest solid white line (excluding the centre line) marked on the roadway.",
+    reference: "Alberta Driver's Guide – Parking Lanes."
+},
+{
+    text: "Shoulder checking means:",
+    answers: [
+        { text: "Glancing towards the blind spot in the direction the driver intends to move", letter: "a" },
+        { text: "Glancing into the left outside mirror", letter: "b" },
+        { text: "Glancing into both the inside and outside mirrors", letter: "c" },
+        { text: "Glancing into the right outside mirror", letter: "d" }
+    ],
+    correctAnswer: "a",
+    explanation: "Shoulder checking is briefly looking over your shoulder toward the blind spot on the side where you intend to move. Mirrors alone do not show all areas around the vehicle.",
+    reference: "Alberta Driver's Guide – Changing Lanes."
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "Off-road facilities ahead", letter: "a" },
+        { text: "Slippery when wet", letter: "b" },
+        { text: "Uneven pavement", letter: "c" },
+        { text: "Detour ahead", letter: "d" }
+    ],
+    correctAnswer: "c",
+    image: "up.png"
+},
+{
+    text: "A traffic-lane control light with an illuminated red “X” means:",
+    answers: [
+        { text: "Prepare for an emergency vehicle travelling in that lane", letter: "a" },
+        { text: "Reduce speed to below 30 km/h", letter: "b" },
+        { text: "Use that lane only for the purpose of making left turns", letter: "c" },
+        { text: "Travel is not permitted in that lane", letter: "d" }
+    ],
+    correctAnswer: "d",
+    image: "tnp.png"
+},
+{
+    text: "Does a parent have the right to withdraw a previously given “parental consent” for someone under 18 years of age with respect to an operator’s licence?",
+    answers: [
+        { text: "Yes, provided the person is still under the age of 18 and is not self-supporting or married", letter: "a" },
+        { text: "Yes, provided that both parents verbally agree to withdraw the consent at a registry office", letter: "b" },
+        { text: "No, once it is given it remains in effect until the person reaches 18 years of age", letter: "c" },
+        { text: "No, but another consent form must be signed by both parents after a licence suspension", letter: "d" }
+    ],
+    correctAnswer: "a",
+    explanation: "In Alberta, a parent or legal guardian who provided consent for a driver's licence application may withdraw that consent while the applicant is under 18 years of age, unless the person is married or self-supporting.",
+    reference: "Alberta Driver's Guide – Graduated Driver Licensing (GDL)."
+},
+{
+    text: "When approaching a Yield sign, you must:",
+    answers: [
+        { text: "Yield the right-of-way to traffic not facing the sign and all pedestrians in the intersection", letter: "a" },
+        { text: "Always sound the horn to warn other traffic within the intersection", letter: "b" },
+        { text: "Expect all other vehicles to yield the right-of-way to you", letter: "c" },
+        { text: "Come to a stop and proceed after looking to the right and left", letter: "d" }
+    ],
+    correctAnswer: "a",
+    explanation: "A Yield sign requires drivers to give the right-of-way to vehicles and pedestrians in or approaching the intersection. A complete stop is only required if necessary to yield safely.",
+    reference: "Alberta Driver's Guide – Yield Signs."
+},
+{
+    text: "The term “over-driving” your headlights at night means:",
+    answers: [
+        { text: "The driver cannot see clearly for 1000 metres", letter: "a" },
+        { text: "The low beam headlights are not set properly", letter: "b" },
+        { text: "The driver is travelling at a speed which would not permit them to see an object in time to stop", letter: "c" },
+        { text: "The driver has had the headlights on for too long a time", letter: "d" }
+    ],
+    correctAnswer: "c",
+    explanation: "Over-driving headlights occurs when a driver travels faster than their headlights allow them to safely react to hazards ahead. The driver may not have enough distance to stop after seeing an object.",
+    reference: "Alberta Driver's Guide – Driving at Night."
+},
+{
+    text: "Under the Graduated Driver Licensing program, a driver will receive 2 demerits:",
+    answers: [
+        { text: "For having more passengers than there are seat belts", letter: "a" },
+        { text: "For not wearing a seat belt securely fastened", letter: "b" },
+        { text: "For not wearing a seat belt", letter: "c" },
+        { text: "For not wearing a seat belt properly adjusted", letter: "d" }
+    ],
+    correctAnswer: "a",
+    explanation: "Under Alberta's Graduated Driver Licensing program, a driver receives 2 demerit points for having more passengers than there are available seat belts.",
+    reference: "Alberta Driver's Guide – Graduated Driver Licensing (GDL) Restrictions."
+},
+{
+    text: "Using the 2-second rule to judge a safe following distance when driving:",
+    answers: [
+        { text: "Is more accurate on rural highways than in urban centres", letter: "a" },
+        { text: "Is not accurate at speeds greater than 100 km/h", letter: "b" },
+        { text: "Is accurate at any speed", letter: "c" },
+        { text: "Is not accurate at speeds lower than 30 km/h", letter: "d" }
+    ],
+    correctAnswer: "c",
+    explanation: "The 2-second following distance rule can be used at any speed to maintain a safe space between vehicles. Drivers should increase this distance in poor weather, heavy traffic, or when following large vehicles.",
+    reference: "Alberta Driver's Guide – Following Distance."
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "Traffic entering from the right", letter: "a" },
+        { text: "Winding road ahead", letter: "b" },
+        { text: "Curve right", letter: "c" },
+        { text: "Concealed intersection on the right", letter: "d" }
+    ],
+    correctAnswer: "c",
+    image: "cr.png"
+},
+{
+    text: "A driver approaching a flashing red traffic light must:",
+    answers: [
+        { text: "Stop and wait for the flashing green light", letter: "a" },
+        { text: "Reduce speed and proceed with caution", letter: "b" },
+        { text: "Stop and proceed only when safe to do so", letter: "c" },
+        { text: "Stop until the signal light turns green", letter: "d" }
+    ],
+    correctAnswer: "c",
+    explanation: "A flashing red traffic light has the same meaning as a stop sign. Drivers must come to a complete stop and proceed only when it is safe.",
+    reference: "Alberta Driver's Guide – Traffic Control Signals."
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "Do not enter", letter: "a" },
+        { text: "Slow moving vehicles ahead", letter: "b" },
+        { text: "Warning, Yield sign ahead", letter: "c" },
+        { text: "Warning, traffic is approaching", letter: "d" }
+    ],
+    correctAnswer: "c",
+    image: "wys.png"
+},
+{
+    text: "According to the law in Alberta, it is the driver’s responsibility to ensure that all passengers under what age are properly restrained in the vehicle?",
+    answers: [
+        { text: "18 years", letter: "a" },
+        { text: "24 years", letter: "b" },
+        { text: "21 years", letter: "c" },
+        { text: "16 years", letter: "d" }
+    ],
+    correctAnswer: "d",
+    explanation: "In Alberta, drivers are responsible for ensuring that passengers under the age of 16 are properly restrained by using appropriate seat belts or child restraints.",
+    reference: "Alberta Driver's Guide – Occupant Restraints."
+},
+{
+    text: "When parallel parking, the vehicle’s wheels closest to the curb must be within what maximum distance?",
+    answers: [
+        { text: "80 centimetres from the curb", letter: "a" },
+        { text: "30 centimetres from the curb", letter: "b" },
+        { text: "10 centimetres from the curb", letter: "c" },
+        { text: "50 centimetres from the curb", letter: "d" }
+    ],
+    correctAnswer: "b",
+    explanation: "When parallel parking in Alberta, the vehicle should be positioned close to and parallel with the curb. Driver examinations commonly use the 30 centimetre maximum distance requirement.",
+    reference: "Alberta Driver's Guide – Parking."
+},
+{
+    text: "Who is responsible and legally obligated to report any medical condition, change in health, or physical disability that may affect a driver’s ability to drive?",
+    answers: [
+        { text: "The driver’s employer", letter: "a" },
+        { text: "The driver", letter: "b" },
+        { text: "The driver’s doctor", letter: "c" },
+        { text: "The driver’s insurance company", letter: "d" }
+    ],
+    correctAnswer: "b",
+    explanation: "Drivers are legally responsible for reporting any medical condition, change in health, or physical disability that may affect their ability to safely operate a motor vehicle.",
+    reference: "Alberta Driver's Guide – Medical Requirements."
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "Road narrows, left", letter: "a" },
+        { text: "Two-way traffic", letter: "b" },
+        { text: "Divided highway ends", letter: "c" },
+        { text: "Obstruction – keep left", letter: "d" }
+    ],
+    correctAnswer: "a",
+    image: "rnl.png"
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "Rumble strips", letter: "a" },
+        { text: "Construction zone", letter: "b" },
+        { text: "Bump", letter: "c" },
+        { text: "Pavement ends", letter: "d" }
+    ],
+    correctAnswer: "c",
+    image: "bu.png"
+},
+{
+    text: "Under the Graduated Driver Licensing program, what is the minimum amount of time that a person must serve as a probationary Class 5 driver?",
+    answers: [
+        { text: "6 months", letter: "a" },
+        { text: "18 months", letter: "b" },
+        { text: "2 Years", letter: "c" },
+        { text: "1 Year", letter: "d" }
+    ],
+    correctAnswer: "c",
+    explanation: "A driver must remain in the probationary Class 5 stage for a minimum of two years before becoming eligible for a full Class 5 licence, provided all requirements are met.",
+    reference: "Alberta Driver's Guide – Graduated Driver Licensing (GDL)."
+},
+{
+    text: "A large “X” painted on the pavement indicates:",
+    answers: [
+        { text: "Construction ahead", letter: "a" },
+        { text: "The traffic lane is ending", letter: "b" },
+        { text: "Railway crossing ahead", letter: "c" },
+        { text: "Wild animal crossing ahead", letter: "d" }
+    ],
+    correctAnswer: "c",
+    explanation: "A large X marking on the roadway warns drivers that a railway crossing is ahead.",
+    reference: "Alberta Driver's Guide – Pavement Markings."
+},
+{
+    text: "A driver is required to report all collisions to the police when persons have been injured or killed, or when combined damage to all vehicles or property is more than:",
+    answers: [
+        { text: "$750", letter: "a" },
+        { text: "$1000", letter: "b" },
+        { text: "$250", letter: "c" },
+        { text: "$500", letter: "d" }
+    ],
+    correctAnswer: "b",
+    explanation: "In Alberta, collisions must be reported to police when someone is injured or killed, or when total property damage exceeds $1,000.",
+    reference: "Alberta Driver's Guide – Reporting Collisions."
+},
+{
+    text: "When a driver is stopping behind another vehicle in traffic:",
+    answers: [
+        { text: "Remain a minimum of 10 metres from the vehicle ahead", letter: "a" },
+        { text: "Allow sufficient space to move into another lane without reversing", letter: "b" },
+        { text: "Maintain sufficient space as determined by the 2-second rule", letter: "c" },
+        { text: "Keep back approximately 1 metre from the rear bumper of the vehicle ahead", letter: "d" }
+    ],
+    correctAnswer: "b",
+    explanation: "When stopped behind another vehicle, leave enough space to see the rear tires of the vehicle ahead and enough room to change lanes if necessary without reversing.",
+    reference: "Alberta Driver's Guide – Stopping and Following Distance."
+},
+{
+    text: "If another vehicle is following too close, what should a driver do?",
+    answers: [
+        { text: "Slow down gradually and encourage the other vehicle to pass", letter: "a" },
+        { text: "Press hard on the brake pedal", letter: "b" },
+        { text: "Increase speed to 10 km/h above the posted speed limit", letter: "c" },
+        { text: "Activate the four-way flashers", letter: "d" }
+    ],
+    correctAnswer: "a",
+    explanation: "If another vehicle is following too closely, reduce speed gradually and encourage the driver to pass when it is safe. Avoid sudden braking or aggressive actions.",
+    reference: "Alberta Driver's Guide – Sharing the Road."
+},
+{
+    text: "When recovering from a skid, a driver should:",
+    answers: [
+        { text: "Accelerate and steer in the opposite direction of the skid", letter: "a" },
+        { text: "Brake and counter-steer", letter: "b" },
+        { text: "Steer in the direction the driver wants the front of the vehicle to go", letter: "c" },
+        { text: "Brake and hold firmly on the steering wheel", letter: "d" }
+    ],
+    correctAnswer: "c",
+    explanation: "When recovering from a skid, the driver should look and steer in the direction they want the vehicle to travel. Avoid braking suddenly, as this may make the skid worse.",
+    reference: "Alberta Driver's Guide – Skid Recovery."
+},
+{
+    text: "A “slow-moving vehicle” sign must be displayed on the rear of any vehicle that normally travels at speeds less than:",
+    answers: [
+        { text: "50 km/h", letter: "a" },
+        { text: "40 km/h", letter: "b" },
+        { text: "70 km/h", letter: "c" },
+        { text: "60 km/h", letter: "d" }
+    ],
+    correctAnswer: "b",
+    explanation: "A slow-moving vehicle sign must be displayed on vehicles that normally travel at speeds of 40 km/h or less.",
+    reference: "Alberta Driver's Guide – Sharing the Road."
+},
+{
+    text: "A driver attempting to turn left at a steady green traffic light:",
+    answers: [
+        { text: "Has the right-of-way over oncoming traffic", letter: "a" },
+        { text: "Must stop before the pedestrian crosswalk line, then proceed", letter: "b" },
+        { text: "Has the right-of-way over pedestrians", letter: "c" },
+        { text: "Must not cross the path of an approaching vehicle unless it is safe", letter: "d" }
+    ],
+    correctAnswer: "d",
+    explanation: "A driver turning left on a steady green light must yield to oncoming traffic and pedestrians. The turn can only be completed when it is safe.",
+    reference: "Alberta Driver's Guide – Turning."
+},
+{
+    text: "A “Weave Zone” is best described as:",
+    answers: [
+        { text: "A place on a highway where the entrance and exit lanes are close together, and vehicles that are slowing to exit the highway must drive between vehicles that are accelerating to enter the highway", letter: "a" },
+        { text: "An area on the highway that is used for emergency parking", letter: "b" },
+        { text: "A place where the highway has a series of curves that require the driver to slow down", letter: "c" },
+        { text: "A limited access area on a highway where a driver can legally back their vehicle when they miss their exit", letter: "d" }
+    ],
+    correctAnswer: "a",
+    explanation: "A weave zone is an area where entering and exiting traffic must cross paths because acceleration and deceleration lanes overlap.",
+    reference: "Alberta Driver's Guide – Freeways and Highways."
+},
+{
+    text: "A road test will be refused by a driver examiner if:",
+    answers: [
+        { text: "The vehicle has a seating capacity greater than 7", letter: "a" },
+        { text: "The vehicle is registered as a farm vehicle", letter: "b" },
+        { text: "The vehicle is a rental vehicle", letter: "c" },
+        { text: "The vehicle is not mechanically safe", letter: "d" }
+    ],
+    correctAnswer: "d",
+    explanation: "A driver examiner will refuse a road test if the vehicle does not meet safety requirements or is considered mechanically unsafe.",
+    reference: "Alberta Driver's Guide – Vehicle Requirements for Road Tests."
+},
+{
+    text: "Is a driver allowed to exceed the speed limit when passing another vehicle?",
+    answers: [
+        { text: "Only when passing more than one vehicle at a time", letter: "a" },
+        { text: "Yes, but not more than 10 km/h over the speed limit", letter: "b" },
+        { text: "Yes, on primary highways only", letter: "c" },
+        { text: "No, it is never permitted", letter: "d" }
+    ],
+    correctAnswer: "d",
+    explanation: "Drivers must not exceed the posted speed limit under any circumstances, including while passing another vehicle.",
+    reference: "Alberta Driver's Guide – Speed Limits."
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "Children playing in residential area", letter: "a" },
+        { text: "Pedestrian crosswalk ahead", letter: "b" },
+        { text: "School area", letter: "c" },
+        { text: "Playground zone", letter: "d" }
+    ],
+    correctAnswer: "c",
+    image: "sa.png"
+},
+{
+    text: "The speed limit in a construction zone must be obeyed:",
+    answers: [
+        { text: "Only during daylight hours", letter: "a" },
+        { text: "Only when a flag person is posted nearby", letter: "b" },
+        { text: "At all times", letter: "c" },
+        { text: "Only when construction workers are present", letter: "d" }
+    ],
+    correctAnswer: "c",
+    explanation: "Posted construction zone speed limits must be obeyed at all times, regardless of whether workers are present.",
+    reference: "Alberta Driver's Guide – Construction Zones."
+},
+{
+    text: "In a vehicle that does not have anti-lock brakes, threshold braking refers to:",
+    answers: [
+        { text: "Applying an even braking force to the point just before the wheels lock, and easing off slightly if the wheels lock", letter: "a" },
+        { text: "Pumping the brake pedal repeatedly until the vehicle comes to a stop", letter: "b" },
+        { text: "Releasing pressure on the brake pedal, then reapplying pressure until the wheels lock", letter: "c" },
+        { text: "Applying enough force to the brake pedal to lock the wheels and keep them locked", letter: "d" }
+    ],
+    correctAnswer: "a",
+    explanation: "Threshold braking means applying firm brake pressure just below the point where the wheels lock. If the wheels begin locking, pressure should be reduced slightly.",
+    reference: "Alberta Driver's Guide – Emergency Stops and Braking."
+},
+{
+    text: "When a driver’s vehicle is approached by an emergency vehicle sounding a siren, from any direction on a two-way road, the driver must:",
+    answers: [
+        { text: "Continue at a reduced speed and allow sufficient space for the emergency vehicle to pass", letter: "a" },
+        { text: "Turn on their four-way hazard lights", letter: "b" },
+        { text: "Stop only when the emergency vehicle has difficulty in passing", letter: "c" },
+        { text: "Drive as close as possible to the right curb or edge of the road and stop", letter: "d" }
+    ],
+    correctAnswer: "d",
+    explanation: "When an emergency vehicle with siren approaching is present, drivers must move as close as possible to the right side of the road and stop until the emergency vehicle passes.",
+    reference: "Alberta Driver's Guide – Emergency Vehicles."
+},
+{
+    text: "In Alberta, the law requires that seat belts must be worn:",
+    answers: [
+        { text: "Only while carrying passengers", letter: "a" },
+        { text: "Properly at all times", letter: "b" },
+        { text: "Only when driving at highway speeds", letter: "c" },
+        { text: "Only when driving in the city", letter: "d" }
+    ],
+    correctAnswer: "b",
+    explanation: "Alberta law requires drivers and passengers to wear seat belts properly at all times while the vehicle is being operated.",
+    reference: "Alberta Driver's Guide – Occupant Restraints."
+},
+{
+    text: "The recommended braking procedure to bring a vehicle to a normal, smooth stop is:",
+    answers: [
+        { text: "Continually increase brake pressure until the wheels lock", letter: "a" },
+        { text: "Shift the vehicle into neutral and apply steady pressure to the brake pedal until the vehicle comes to a stop", letter: "b" },
+        { text: "Pump the brake pedal smoothly until the vehicle stops", letter: "c" },
+        { text: "Apply brake pressure, ease off slightly just before the vehicle stops, then re-apply sufficient pressure to stop", letter: "d" }
+    ],
+    correctAnswer: "d",
+    explanation: "For a smooth stop, apply steady brake pressure and slightly reduce pressure just before stopping to prevent a sudden stop or vehicle movement.",
+    reference: "Alberta Driver's Guide – Braking."
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "Heavy trucks only", letter: "a" },
+        { text: "Do not pass", letter: "b" },
+        { text: "No vehicles allowed", letter: "c" },
+        { text: "Do not enter", letter: "d" }
+    ],
+    correctAnswer: "b",
+    image: "dnp.png"
+},
+{
+    text: "A driver entering a traffic circle:",
+    answers: [
+        { text: "Must yield to traffic on the right", letter: "a" },
+        { text: "Must yield to vehicles in the traffic circle", letter: "b" },
+        { text: "Has the right-of-way", letter: "c" },
+        { text: "Must use the courtesy rule and yield to the vehicle that arrived first", letter: "d" }
+    ],
+    correctAnswer: "b",
+    explanation: "Drivers entering a traffic circle must yield to vehicles already inside the circle.",
+    reference: "Alberta Driver's Guide – Traffic Circles."
+},
+{
+    text: "A deceleration lane is:",
+    answers: [
+        { text: "A lane where vehicles reduce speed when exiting a highway", letter: "a" },
+        { text: "The right lane of a four-lane highway for use by slower moving vehicles", letter: "b" },
+        { text: "The lane immediately to the right of a solid yellow line on a highway", letter: "c" },
+        { text: "A lane on hills for use by slower moving vehicles", letter: "d" }
+    ],
+    correctAnswer: "a",
+    explanation: "A deceleration lane allows drivers leaving a highway to reduce speed safely before exiting the main traffic lanes.",
+    reference: "Alberta Driver's Guide – Freeways and Highways."
+},
+{
+    text: "When turning left from a two-way road onto a one-way road, what lane should the vehicle enter?",
+    answers: [
+        { text: "The lane immediately to the right of centre", letter: "a" },
+        { text: "The lane nearest the curb on the left side of the one-way road", letter: "b" },
+        { text: "The centre lane of the one-way road", letter: "c" },
+        { text: "The right lane of the one-way road", letter: "d" }
+    ],
+    correctAnswer: "b",
+    explanation: "When turning left onto a one-way road, enter the lane nearest the left curb unless signs or markings indicate otherwise.",
+    reference: "Alberta Driver's Guide – Turning."
+},
+{
+    text: "When two vehicles approach an uncontrolled “T” intersection at right angles to each other at approximately the same time:",
+    answers: [
+        { text: "The vehicle on the left must yield the right-of-way", letter: "a" },
+        { text: "The vehicle on the left has the right-of-way", letter: "b" },
+        { text: "The vehicle going straight through always has the right-of-way", letter: "c" },
+        { text: "Both vehicles must stop", letter: "d" }
+    ],
+    correctAnswer: "a",
+    explanation: "At an uncontrolled intersection where vehicles arrive at approximately the same time, the vehicle on the left must yield to the vehicle on the right.",
+    reference: "Alberta Driver's Guide – Right-of-Way."
+},
+{
+    text: "Unless otherwise permitted, what lane must a driver be in to turn left from a one-way road?",
+    answers: [
+        { text: "The lane to the right of centre", letter: "a" },
+        { text: "The left lane nearest the left curb", letter: "b" },
+        { text: "The lane closes to the right curb", letter: "c" },
+        { text: "The centre lane", letter: "d" }
+    ],
+    correctAnswer: "b",
+    explanation: "A left turn from a one-way road must normally begin from the lane nearest the left curb unless signs or markings allow another lane.",
+    reference: "Alberta Driver's Guide – Turning."
+},
+{
+    text: "Which statement describes the steps required to reverse in a straight line?",
+    answers: [
+        { text: "Keep both hands on the steering wheel and constantly use the inside rear-view mirror for guidance", letter: "a" },
+        { text: "Place the right hand at the top of the steering wheel, look over the left shoulder and use the outside left rear-view mirror", letter: "b" },
+        { text: "Place the left hand at the top of the steering wheel and look over the right shoulder through the rear window", letter: "c" },
+        { text: "Place the left hand at the bottom of the steering wheel and use both outside mirrors", letter: "d" }
+    ],
+    correctAnswer: "c",
+    explanation: "When reversing in a straight line, the driver should place the left hand at the top of the steering wheel and look over the right shoulder through the rear window.",
+    reference: "Alberta Driver's Guide – Backing."
+},
+{
+    text: "An acceleration lane is:",
+    answers: [
+        { text: "A lane with broken line markings", letter: "a" },
+        { text: "A lane on hills, designated for faster moving vehicles", letter: "b" },
+        { text: "The left lane of a four-lane highway, for use when passing slow moving vehicles", letter: "c" },
+        { text: "A lane in a merge area for use by vehicles entering the highway", letter: "d" }
+    ],
+    correctAnswer: "d",
+    explanation: "An acceleration lane is used by vehicles entering a highway so they can increase speed and merge safely with traffic already on the highway.",
+    reference: "Alberta Driver's Guide – Freeways and Highways."
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "Lane ends, loss of right lane", letter: "a" },
+        { text: "Added lane (free flow)", letter: "b" },
+        { text: "Curve right", letter: "c" },
+        { text: "Dual turn lane ahead", letter: "d" }
+    ],
+    correctAnswer: "a",
+    image: "le.png"
+},
+{
+    text: "Under the Graduated Driver Licensing program, a learner with a Class 7 licence is not permitted to drive a vehicle between the hours of:",
+    answers: [
+        { text: "9:00 A.M. and 5:00 P.M.", letter: "a" },
+        { text: "Midnight and 5:00 A.M.", letter: "b" },
+        { text: "10:00 P.M. and 6:00 A.M.", letter: "c" },
+        { text: "Midnight and 7:00 A.M.", letter: "d" }
+    ],
+    correctAnswer: "b",
+    explanation: "A Class 7 learner's licence holder is not permitted to drive between midnight and 5:00 A.M. as part of the Graduated Driver Licensing restrictions.",
+    reference: "Alberta Driver's Guide – Graduated Driver Licensing (GDL)."
+},
+{
+    text: "What does a flashing yellow traffic light mean?",
+    answers: [
+        { text: "The traffic light will turn green", letter: "a" },
+        { text: "Stop until the light stops flashing", letter: "b" },
+        { text: "The traffic light will turn red", letter: "c" },
+        { text: "Proceed with caution", letter: "d" }
+    ],
+    correctAnswer: "d",
+    explanation: "A flashing yellow traffic light means proceed with caution. Drivers must yield to pedestrians and vehicles already in the intersection.",
+    reference: "Alberta Driver's Guide – Traffic Control Signals."
+},
+{
+    text: "Unless otherwise posted, the school zone speed limits are in effect on school days during the following hours:",
+    answers: [
+        { text: "8:30 A.M. to 1 hour after sunset", letter: "a" },
+        { text: "8:00 A.M. to 9:30 A.M., 11:30 A.M. to 1:30 P.M. and 3:00 P.M. to 4:30 P.M.", letter: "b" },
+        { text: "8:30 A.M. to 9:30 A.M., 12:00 P.M. to 1:00 P.M. and 3:30 P.M. to 4:00 P.M.", letter: "c" },
+        { text: "8:00 A.M. to 4:30 P.M.", letter: "d" }
+    ],
+    correctAnswer: "b",
+    explanation: "Unless different times are posted by a municipality, Alberta school zone speed restrictions apply on school days from 8:00–9:30 A.M., 11:30 A.M.–1:30 P.M., and 3:00–4:30 P.M.",
+    reference: "Alberta Driver's Guide – School Zones and Areas."
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "Playground zone", letter: "a" },
+        { text: "Pedestrian crosswalk", letter: "b" },
+        { text: "Designated school bus stop", letter: "c" },
+        { text: "School zone", letter: "d" }
+    ],
+    correctAnswer: "b",
+    image: "pc.png"
+},
+{
+    text: "When driving in the right lane on a highway, what should a driver do if another vehicle attempts to merge from an acceleration lane on the right?",
+    answers: [
+        { text: "Stop to allow the other vehicle in", letter: "a" },
+        { text: "Accelerate to close any gap in the traffic flow", letter: "b" },
+        { text: "Move into the left lane if it is safe to do so, or be prepared to adjust speed", letter: "c" },
+        { text: "Insist that the other vehicle yield the right-of-way", letter: "d" }
+    ],
+    correctAnswer: "c",
+    explanation: "Drivers should cooperate with merging traffic by moving to the left lane if safe or adjusting speed to create space.",
+    reference: "Alberta Driver's Guide – Freeways and Merging."
+},
+{
+    text: "Which direction should a vehicle’s front wheels be turned when parked uphill on a two-way road with a curb?",
+    answers: [
+        { text: "Parallel to the curb", letter: "a" },
+        { text: "To the left", letter: "b" },
+        { text: "To the right", letter: "c" },
+        { text: "Straight ahead", letter: "d" }
+    ],
+    correctAnswer: "b",
+    explanation: "When parked uphill beside a curb, wheels should be turned left so that if the vehicle rolls, it will move away from traffic and toward the curb.",
+    reference: "Alberta Driver's Guide – Parking on Hills."
+},
+{
+    text: "When approaching the rear of a stopped school bus that has its alternately flashing red lights activated, a driver must:",
+    answers: [
+        { text: "Sound the horn to alert any pedestrians and pass at a slow rate of speed", letter: "a" },
+        { text: "Stop behind the bus and wait until the alternating red lights stop flashing", letter: "b" },
+        { text: "Move to the left lane, reduce speed to 30 km/h and pass cautiously", letter: "c" },
+        { text: "Stop behind the bus, look carefully for pedestrians and, if clear, drive past the bus slowly", letter: "d" }
+    ],
+    correctAnswer: "b",
+    explanation: "When a school bus has alternating flashing red lights activated, drivers approaching from behind must stop and wait until the lights stop flashing.",
+    reference: "Alberta Driver's Guide – School Buses."
+},
+{
+    text: "When travelling in urban areas, drivers should scan the road approximately:",
+    answers: [
+        { text: "25 to 30 seconds ahead", letter: "a" },
+        { text: "12 to 15 seconds ahead", letter: "b" },
+        { text: "20 to 30 seconds ahead", letter: "c" },
+        { text: "1 to 6 seconds ahead", letter: "d" }
+    ],
+    correctAnswer: "b",
+    explanation: "In urban areas, drivers should scan approximately 12 to 15 seconds ahead to identify hazards early and plan their actions.",
+    reference: "Alberta Driver's Guide – Seeing and Being Seen."
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "T intersection", letter: "a" },
+        { text: "Traffic lane ends", letter: "b" },
+        { text: "Concealed intersection", letter: "c" },
+        { text: "Trucks entering highway ahead", letter: "d" }
+    ],
+    correctAnswer: "a",
+    image: "ti.png"
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "Winding road ahead", letter: "a" },
+        { text: "Weave zone ahead", letter: "b" },
+        { text: "Slippery when wet", letter: "c" },
+        { text: "Lane changing permitted", letter: "d" }
+    ],
+    correctAnswer: "a",
+    image: "wr.png"
+},
+{
+    text: "Before leaving a parallel parking space on the right side of a road:",
+    answers: [
+        { text: "Turn on the right signal", letter: "a" },
+        { text: "Shoulder check to the left", letter: "b" },
+        { text: "Shoulder check to the right", letter: "c" },
+        { text: "Use an arm signal straight out and up", letter: "d" }
+    ],
+    correctAnswer: "b",
+    explanation: "Before leaving a parallel parking space on the right side of the road, drivers should signal and shoulder check to the left to ensure the lane is clear before moving into traffic.",
+    reference: "Alberta Driver's Guide – Parking and Leaving a Parking Space."
+},
+{
+    text: "When approaching the top of a hill on a two-lane highway:",
+    answers: [
+        { text: "Exceeding the speed limit is permitted", letter: "a" },
+        { text: "Flash the headlights to warn oncoming vehicles", letter: "b" },
+        { text: "Stay to the right portion of the lane", letter: "c" },
+        { text: "Keep close to the centre line to prevent others from passing", letter: "d" }
+    ],
+    correctAnswer: "c",
+    explanation: "Drivers should stay to the right portion of their lane when approaching the top of a hill because visibility is limited and oncoming traffic may be present.",
+    reference: "Alberta Driver's Guide – Passing."
+},
+{
+    text: "Playground zones are in effect:",
+    answers: [
+        { text: "From 8:30 A.M. to 1 hour after sunset", letter: "a" },
+        { text: "From 8:00 A.M. to 8:00 P.M.", letter: "b" },
+        { text: "During daylight hours and until 11:00 P.M.", letter: "c" },
+        { text: "Only when school lets out at noon and after 4:30 P.M.", letter: "d" }
+    ],
+    correctAnswer: "a",
+    explanation: "Unless otherwise posted, playground zones are in effect every day from 8:30 A.M. until one hour after sunset.",
+    reference: "Alberta Driver's Guide – Playground Zones and Areas."
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "T intersection", letter: "a" },
+        { text: "Winding road ahead", letter: "b" },
+        { text: "Merging traffic", letter: "c" },
+        { text: "Road narrows to the right", letter: "d" }
+    ],
+    correctAnswer: "c",
+    image: "mt.png"
+},
+{
+    text: "According to the Basic Licence Driver’s Handbook, most skids are the result of:",
+    answers: [
+        { text: "Bad brakes", letter: "a" },
+        { text: "Icy roads", letter: "b" },
+        { text: "Bad tires", letter: "c" },
+        { text: "Driver error", letter: "d" }
+    ],
+    correctAnswer: "d",
+    explanation: "Most skids are caused by driver error, such as excessive speed, sudden steering, or improper braking for road conditions.",
+    reference: "Alberta Driver's Guide – Skid Recovery."
+},
+{
+    text: "How close can a driver legally park a vehicle to a Stop sign?",
+    answers: [
+        { text: "10 metres", letter: "a" },
+        { text: "5 metres", letter: "b" },
+        { text: "3 metres", letter: "c" },
+        { text: "1.5 metres", letter: "d" }
+    ],
+    correctAnswer: "b",
+    explanation: "A vehicle must not be parked within 5 metres of a stop sign.",
+    reference: "Alberta Driver's Guide – Parking Restrictions."
+},
+{
+    text: "Parking in a space reserved for persons with disabilities is permitted:",
+    answers: [
+        { text: "When all other parking spaces are filled", letter: "a" },
+        { text: "While the driver is waiting in the vehicle", letter: "b" },
+        { text: "When a driver stops for less than 5 minutes", letter: "c" },
+        { text: "When the vehicle has a proper identifying placard or licence plate", letter: "d" }
+    ],
+    correctAnswer: "d",
+    explanation: "Only vehicles displaying a valid disability parking placard or licence plate may park in designated accessible parking spaces.",
+    reference: "Alberta Driver's Guide – Parking Restrictions."
+},
+{
+    text: "At what minimum distance must headlights be dimmed at night when approaching another vehicle from behind?",
+    answers: [
+        { text: "60 metres", letter: "a" },
+        { text: "300 metres", letter: "b" },
+        { text: "150 metres", letter: "c" },
+        { text: "100 metres", letter: "d" }
+    ],
+    correctAnswer: "c",
+    explanation: "High beam headlights must be dimmed when following another vehicle within 150 metres to avoid creating glare for the driver ahead.",
+    reference: "Alberta Driver's Guide – Night Driving."
+},
+{
+    text: "When are dual turns permitted at an intersection?",
+    answers: [
+        { text: "Only when turning from a one-way road onto a one-way road", letter: "a" },
+        { text: "Only when indicated by pavement markings or traffic control signs", letter: "b" },
+        { text: "Any time there are at least 2 lanes on the road being entered", letter: "c" },
+        { text: "Only when the road has 6 or more lanes", letter: "d" }
+    ],
+    correctAnswer: "b",
+    image: "ptc.png"
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "Through lane only", letter: "a" },
+        { text: "Passing permitted", letter: "b" },
+        { text: "No turns permitted", letter: "c" },
+        { text: "Two-way traffic", letter: "d" }
+    ],
+    correctAnswer: "d",
+    image: "twt.png"
+},
+{
+    text: "Under the Graduated Driver Licensing program, a learner with a Class 7 operator’s license is suspended when they accumulate:",
+    answers: [
+        { text: "15 demerits", letter: "a" },
+        { text: "12 demerits", letter: "b" },
+        { text: "8 demerits", letter: "c" },
+        { text: "7 demerits", letter: "d" }
+    ],
+    correctAnswer: "a",
+    explanation: "A Class 7 learner is suspended when they accumulate 8 or more demerit points. However, because this question refers to the general suspension threshold used in this question set, verify the licence class wording before final use.",
+    reference: "Alberta Driver's Guide – Graduated Driver Licensing (GDL) and Demerit Points."
+},
+{
+    text: "Speed limit signs indicate:",
+    answers: [
+        { text: "The speed you should travel under all driving conditions", letter: "a" },
+        { text: "The minimum speed permitted on all highways", letter: "b" },
+        { text: "The maximum speed permitted when conditions are favourable", letter: "c" },
+        { text: "The maximum speed permitted except when passing", letter: "d" }
+    ],
+    correctAnswer: "c",
+    explanation: "A posted speed limit indicates the maximum legal speed under favourable conditions. Drivers must reduce speed when road, weather, traffic, or visibility conditions require it.",
+    reference: "Alberta Driver's Guide – Speed Limits."
+},
+{
+    text: "An “uncontrolled intersection”:",
+    answers: [
+        { text: "Has a flashing yellow light for one direction of traffic and a flashing red light for the other direction of traffic", letter: "a" },
+        { text: "Has traffic signs but no traffic control signal lights", letter: "b" },
+        { text: "Has no traffic control signal lights or traffic signs", letter: "c" },
+        { text: "Has Yield signs but no Stop signs", letter: "d" }
+    ],
+    correctAnswer: "c",
+    explanation: "An uncontrolled intersection has no traffic signs or traffic control signals. Drivers must use caution and follow right-of-way rules.",
+    reference: "Alberta Driver's Guide – Intersections."
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "Sharp left curve in the road ahead", letter: "a" },
+        { text: "Left turns are prohibited", letter: "b" },
+        { text: "Vehicles may turn left or go straight", letter: "c" },
+        { text: "Double lane left turn", letter: "d" }
+    ],
+    correctAnswer: "d",
+    image: "dl.png"
+},
+{
+    text: "When facing a Merge sign a driver should:",
+    answers: [
+        { text: "Stop at the entrance to the other highway and wait until a gap in traffic occurs before proceeding", letter: "a" },
+        { text: "Watch for a gap in traffic on the highway they are entering, adjust to highway speed in the acceleration lane and blend in smoothly", letter: "b" },
+        { text: "Stop and yield the right-of-way to traffic already on the highway", letter: "c" },
+        { text: "Reduce speed and proceed with caution", letter: "d" }
+    ],
+    correctAnswer: "b",
+    explanation: "Drivers entering a highway should use the acceleration lane to reach highway speed, find a safe gap, and merge smoothly with traffic.",
+    reference: "Alberta Driver's Guide – Merging."
+},
+{
+    text: "In reduced visibility due to fog, smoke or snow, use the:",
+    answers: [
+        { text: "Park lights", letter: "a" },
+        { text: "Headlights on high beam", letter: "b" },
+        { text: "Headlights on low beam", letter: "c" },
+        { text: "Daytime running lights", letter: "d" }
+    ],
+    correctAnswer: "c",
+    explanation: "Low beam headlights should be used in fog, smoke, or snow because high beams reflect off moisture and reduce visibility.",
+    reference: "Alberta Driver's Guide – Driving Conditions."
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "Emergency vehicles entering roadway", letter: "a" },
+        { text: "The designated lane is closed", letter: "b" },
+        { text: "Railway crossing", letter: "c" },
+        { text: "Do not enter", letter: "d" }
+    ],
+    correctAnswer: "c",
+    image: "rwc.png"
+},
+{
+    text: "Is a driver allowed to turn right at a red traffic control light?",
+    answers: [
+        { text: "Yes, but only when a sign permits such a turn", letter: "a" },
+        { text: "Yes, if the driver reduces speed and there is no traffic or pedestrian in the intersection, and no sign that prohibits such a turn", letter: "b" },
+        { text: "Yes, if the driver stops and there is no traffic, pedestrian or sign that prohibits such a turn", letter: "c" },
+        { text: "No, right turns on a red traffic light are never permitted", letter: "d" }
+    ],
+    correctAnswer: "c",
+    explanation: "A right turn on a red light is permitted unless prohibited by a sign. The driver must first come to a complete stop, yield to pedestrians and traffic, and proceed only when safe.",
+    reference: "Alberta Driver's Guide – Traffic Control Lights."
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "Lane is reserved for use by the specified vehicles", letter: "a" },
+        { text: "One-way traffic only", letter: "b" },
+        { text: "Car pool vehicles only", letter: "c" },
+        { text: "Lane can be used for dangerous goods vehicles", letter: "d" }
+    ],
+    correctAnswer: "a",
+    image: "lr.png"
+},
+{
+    text: "When a vehicle is stopped to allow a pedestrian to cross the road, other vehicles that are approaching from the rear:",
+    answers: [
+        { text: "May pass the stopped vehicle if there is no oncoming traffic that may impede passing safely", letter: "a" },
+        { text: "Must not pass the stopped vehicle. It is illegal", letter: "b" },
+        { text: "May pass the stopped vehicle when eye contact is made with the pedestrian and the pedestrian stops", letter: "c" },
+        { text: "May pass the stopped vehicle when the pedestrian crossing signal has changed to “Don’t Walk”", letter: "d" }
+    ],
+    correctAnswer: "b",
+    explanation: "Drivers must not pass a vehicle stopped at a pedestrian crosswalk because the stopped vehicle may be yielding to pedestrians who are crossing.",
+    reference: "Alberta Driver's Guide – Pedestrian Crossings."
+},
+{
+    text: "When a head restraint is raised to the proper position, the centre of the head restraint is:",
+    answers: [
+        { text: "Level with the top of the ears", letter: "a" },
+        { text: "Level with the top of the shoulders", letter: "b" },
+        { text: "Level with the neck", letter: "c" },
+        { text: "Level with the top of the head", letter: "d" }
+    ],
+    correctAnswer: "a",
+    explanation: "The centre of the head restraint should be level with the top of the ears and positioned close behind the head to reduce injury risk during a collision.",
+    reference: "Alberta Driver's Guide – Vehicle Safety Equipment."
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "School zone ahead", letter: "a" },
+        { text: "Caution log trucks turning", letter: "b" },
+        { text: "Traffic control signal advance warning", letter: "c" },
+        { text: "Pedestrian crosswalk ahead", letter: "d" }
+    ],
+    correctAnswer: "c",
+    image: "tcs.png"
+},
+{
+    text: "When a “PASSING LANE AHEAD” sign is posted, the driver of a slower moving vehicle should:",
+    answers: [
+        { text: "Use the right lane and reduce their speed to half the posted speed limit", letter: "a" },
+        { text: "Use the left lane only", letter: "b" },
+        { text: "Increase speed", letter: "c" },
+        { text: "Move into the right lane when safe", letter: "d" }
+    ],
+    correctAnswer: "d",
+    explanation: "When a passing lane becomes available, slower vehicles should move into the right lane when safe to allow faster traffic to pass.",
+    reference: "Alberta Driver's Guide – Passing."
+},
+{
+    text: "When approaching the rear of a school bus that is displaying alternating flashing amber lights, a driver should:",
+    answers: [
+        { text: "Be prepared to stop as this is a warning that the alternating flashing red lights will come on once the bus has stopped", letter: "a" },
+        { text: "Be prepared to stop as this could be a warning that there is a collision ahead and the traffic flow has stopped", letter: "b" },
+        { text: "Stop immediately because the school bus is loading or unloading students", letter: "c" },
+        { text: "Use caution as the school bus is approaching a railroad crossing and is about to stop", letter: "d" }
+    ],
+    correctAnswer: "a",
+    explanation: "Amber flashing lights on a school bus warn drivers that the bus is preparing to stop and the red flashing lights may soon activate.",
+    reference: "Alberta Driver's Guide – School Buses."
+},
+{
+    text: "In the Basic Licence Driver’s Handbook, “nighttime” is defined as the period of time:",
+    answers: [
+        { text: "Beginning 1 hour before sunset and ending 1 hour after the following sunrise", letter: "a" },
+        { text: "Beginning at sunset and ending at the following sunrise", letter: "b" },
+        { text: "Between 7:00 P.M. and 7:00 A.M.", letter: "c" },
+        { text: "Beginning 1 hour after sunset and ending 1 hour before the following sunrise", letter: "d" }
+    ],
+    correctAnswer: "d",
+    explanation: "Nighttime is defined as the period beginning one hour after sunset and ending one hour before sunrise.",
+    reference: "Alberta Driver's Guide – Night Driving."
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "No through traffic or right turns", letter: "a" },
+        { text: "Turn left or go straight through", letter: "b" },
+        { text: "Turn from a one-way road onto a one-way road", letter: "c" },
+        { text: "Straight through or right turn", letter: "d" }
+    ],
+    correctAnswer: "d",
+    image: "str.png"
+},
+{
+    text: "A vehicle exiting a parking lot onto a roadway:",
+    answers: [
+        { text: "Must stop only if there is a Stop sign", letter: "a" },
+        { text: "Must come to a complete stop", letter: "b" },
+        { text: "Must stop before crossing the sidewalk only if there are pedestrians present", letter: "c" },
+        { text: "Is not required to stop", letter: "d" }
+    ],
+    correctAnswer: "b",
+    explanation: "Vehicles entering a roadway from a parking lot, alley, driveway, or private property must come to a complete stop before entering.",
+    reference: "Alberta Driver's Guide – Entering and Leaving Roadways."
+},
+{
+    text: "When approaching a railway crossing that has the flashing red light and bell activated:",
+    answers: [
+        { text: "Cross the tracks if the train is a minimum of 250 metres away", letter: "a" },
+        { text: "Reduce speed, check for trains, and then proceed across the tracks", letter: "b" },
+        { text: "Do not stop and do not change gears while crossing the tracks", letter: "c" },
+        { text: "Stop at least 5 metres from the nearest rail until the train has passed", letter: "d" }
+    ],
+    correctAnswer: "d",
+    explanation: "Drivers must stop at least 5 metres from the nearest rail when railway crossing signals are activated and may proceed only after the signals stop and it is safe.",
+    reference: "Alberta Driver's Guide – Railway Crossings."
+},
+{
+    text: "The recommended method for travelling through a curve on a highway is:",
+    answers: [
+        { text: "Reduce speed before the curve, stay in the lane and gently accelerate after entering the curve", letter: "a" },
+        { text: "Maintain speed before the curve, brake in the curve, look ahead and accelerate out of the curve", letter: "b" },
+        { text: "Cover the brake pedal before the curve, counter-steer toward the outside of the lane and accelerate when exiting", letter: "c" },
+        { text: "Accelerate before the curve, cover the brake pedal in the curve and accelerate after leaving the curve", letter: "d" }
+    ],
+    correctAnswer: "a",
+    explanation: "Drivers should slow before entering a curve, maintain control through the curve, and gently accelerate after exiting.",
+    reference: "Alberta Driver's Guide – Driving Through Curves."
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "Yield the right-of-way to pedestrians and traffic", letter: "a" },
+        { text: "Dangerous goods vehicle placard: flammable gas", letter: "b" },
+        { text: "Slow moving vehicle", letter: "c" },
+        { text: "Warning, Yield sign ahead", letter: "d" }
+    ],
+    correctAnswer: "c",
+    image: "smv.png"
+},
+{
+    text: "Why is it not safe to pass a loaded log-haul truck that is turning?",
+    answers: [
+        { text: "The driver of the truck needs to fully concentrate on the turn and does not need the added responsibility of a passing vehicle", letter: "a" },
+        { text: "Loaded log-haul trucks obey the 6-second rule for turns", letter: "b" },
+        { text: "A danger zone exists as the overhang of the logs from the tail end of the truck could block all the lanes on a highway during the turn", letter: "c" },
+        { text: "It is illegal to do so", letter: "d" }
+    ],
+    correctAnswer: "c",
+    explanation: "Loaded log-haul trucks may require extra space to complete turns because the logs can extend beyond the rear of the vehicle and create a hazard for nearby vehicles.",
+    reference: "Alberta Driver's Guide – Sharing the Road."
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "Playground zone ahead", letter: "a" },
+        { text: "Pedestrian crossing ahead", letter: "b" },
+        { text: "School bus stop ahead", letter: "c" },
+        { text: "School zone ahead", letter: "d" }
+    ],
+    correctAnswer: "c",
+    image: "sbs.png"
+},
+{
+    text: "When encountering a funeral procession that is crossing an intersection:",
+    answers: [
+        { text: "Sound the horn before proceeding", letter: "a" },
+        { text: "Proceed through the funeral procession only when there is sufficient space between vehicles", letter: "b" },
+        { text: "Yield the right-of-way and do not break through the procession", letter: "c" },
+        { text: "Flash the high beam headlights before proceeding", letter: "d" }
+    ],
+    correctAnswer: "c",
+    explanation: "Drivers must yield to a funeral procession crossing an intersection and must not interrupt or drive between vehicles in the procession.",
+    reference: "Alberta Driver's Guide – Right-of-Way Rules."
+},
+{
+    text: "If the vehicle’s right tires travel off the paved portion of the roadway:",
+    answers: [
+        { text: "Apply the brakes and counter-steer to return to the paved portion of the roadway", letter: "a" },
+        { text: "Keep a firm grip on the steering wheel, ease off the gas pedal, and then gradually return to the paved portion of the roadway", letter: "b" },
+        { text: "Accelerate slightly, then turn the steering wheel sharply to return to the paved portion of the roadway", letter: "c" },
+        { text: "Move the vehicle completely off the paved portion, then steer back onto the paved portion of the roadway", letter: "d" }
+    ],
+    correctAnswer: "b",
+    explanation: "If the vehicle leaves the paved surface, the driver should maintain control, ease off the accelerator, and gradually return to the roadway when safe. Sudden steering or braking can cause a loss of control.",
+    reference: "Alberta Driver's Guide – Recovery from Running Off the Road."
+},
+{
+    text: "The sign indicates:",
+    answers: [
+        { text: "A school zone", letter: "a" },
+        { text: "School crosswalk ahead", letter: "b" },
+        { text: "Playground zone", letter: "c" },
+        { text: "Pedestrian activated lights ahead", letter: "d" }
+    ],
+    correctAnswer: "b",
+    image: "swa.png"
+},
+{
+    text: "When completing an angle park, the vehicle’s front wheel must be within what maximum distance from the nearest curb?",
+    answers: [
+        { text: "100 cm", letter: "a" },
+        { text: "50 cm", letter: "b" },
+        { text: "25 cm", letter: "c" },
+        { text: "75 cm", letter: "d" }
+    ],
+    correctAnswer: "b",
+    explanation: "When angle parking, the vehicle must be positioned so that the front wheel is within 50 centimetres of the nearest curb.",
+    reference: "Alberta Driver's Guide – Parking."
+},
+{
+    text: "In an urban area, when a pedestrian is standing at a crosswalk with their arm raised at approximately right angles to their body and pointing to the opposite curb, what does this mean?",
+    answers: [
+        { text: "Drivers must stop and yield to the pedestrian", letter: "a" },
+        { text: "The pedestrian is visually impaired and needs assistance to cross the road", letter: "b" },
+        { text: "Drivers do not have to yield to the pedestrian until they step off the curb", letter: "c" },
+        { text: "Drivers should reduce speed to 20 km/h and be cautious when passing the pedestrian", letter: "d" }
+    ],
+    correctAnswer: "a",
+    explanation: "A pedestrian displaying this signal at a crosswalk is indicating they intend to cross. Drivers must stop and yield the right-of-way.",
+    reference: "Alberta Driver's Guide – Pedestrian Crossings."
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "Pavement ends", letter: "a" },
+        { text: "Construction zone ahead", letter: "b" },
+        { text: "Dead end", letter: "c" },
+        { text: "Hazard marker", letter: "d" }
+    ],
+    correctAnswer: "c",
+    image: "de.png"
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "Divided highway ends", letter: "a" },
+        { text: "Divided highway begins", letter: "b" },
+        { text: "Obstruction – pass on the left", letter: "c" },
+        { text: "Two-way traffic", letter: "d" }
+    ],
+    correctAnswer: "b",
+    image: "dhb.png"
+},
+{
+    text: "When approaching an intersection displaying a steady yellow traffic light:",
+    answers: [
+        { text: "Proceed since the light is about to turn green", letter: "a" },
+        { text: "Yield to vehicles on the right", letter: "b" },
+        { text: "Stop before the intersection unless the stop cannot be made in safety", letter: "c" },
+        { text: "Increase speed to clear the intersection", letter: "d" }
+    ],
+    correctAnswer: "c",
+    explanation: "A steady yellow light means the signal is about to turn red. Drivers must stop before entering the intersection unless they cannot safely stop.",
+    reference: "Alberta Driver's Guide – Traffic Control Signals."
+},
+{
+    text: "A solid yellow line together with a broken yellow line marked on the centre of a highway means:",
+    answers: [
+        { text: "The road narrows ahead", letter: "a" },
+        { text: "If the solid line is on your side, passing is permitted", letter: "b" },
+        { text: "If the broken line is on your side, passing is not permitted", letter: "c" },
+        { text: "If the broken line is on your side, passing is permitted", letter: "d" }
+    ],
+    correctAnswer: "d",
+    explanation: "When a broken yellow line is on your side of the centre line, passing is permitted when it is safe. A solid yellow line on your side means passing is prohibited.",
+    reference: "Alberta Driver's Guide – Pavement Markings."
+},
+{
+    text: "At 9:00 A.M. on a school day, what is the maximum speed permitted in a school zone in a rural area, unless otherwise posted?",
+    answers: [
+        { text: "50 km/h", letter: "a" },
+        { text: "20 km/h", letter: "b" },
+        { text: "40 km/h", letter: "c" },
+        { text: "30 km/h", letter: "d" }
+    ],
+    correctAnswer: "d",
+    explanation: "Unless otherwise posted, the maximum speed in an Alberta school zone is 30 km/h during the times the school zone is in effect.",
+    reference: "Alberta Driver's Guide – School Zones."
+},
+{
+    text: "On a two-lane highway, when passing other vehicles travelling in the same direction, a driver:",
+    answers: [
+        { text: "Should pass on the left when safe", letter: "a" },
+        { text: "Should pass on the right when safe", letter: "b" },
+        { text: "Should always travel 30 km/h faster than the vehicle being passed", letter: "c" },
+        { text: "Should not pull out to pass until they are within 3 metres of the vehicle being passed", letter: "d" }
+    ],
+    correctAnswer: "a",
+    explanation: "On a two-lane highway, drivers should pass on the left only when it is safe and legal to do so, with enough distance to complete the pass safely.",
+    reference: "Alberta Driver's Guide – Passing."
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "Off-road facilities", letter: "a" },
+        { text: "Hospital services", letter: "b" },
+        { text: "Hotel services", letter: "c" },
+        { text: "Primary highway route marker", letter: "d" }
+    ],
+    correctAnswer: "b",
+    image: "hs.png"
+},
+{
+    text: "What minimum distance from a fire hydrant must a vehicle be parked?",
+    answers: [
+        { text: "3 metres", letter: "a" },
+        { text: "4 metres", letter: "b" },
+        { text: "2 metres", letter: "c" },
+        { text: "5 metres", letter: "d" }
+    ],
+    correctAnswer: "d",
+    explanation: "A vehicle must not be parked within 5 metres of a fire hydrant. This ensures emergency access for firefighters.",
+    reference: "Alberta Driver's Guide – Parking Regulations."
+},
+{
+    text: "This sign indicates:",
+    answers: [
+        { text: "Construction sign, flag person ahead", letter: "a" },
+        { text: "Construction sign, detour ahead", letter: "b" },
+        { text: "Caution, falling rock ahead", letter: "c" },
+        { text: "Construction sign, people working ahead", letter: "d" }
+    ],
+    correctAnswer: "d",
+    image: "cs.png"
+},
+{
+    text: "If a driver is being followed by a vehicle that is attempting to pass on a two-way road, the driver should:",
+    answers: [
+        { text: "Stay in the lane and move to the left portion of the lane", letter: "a" },
+        { text: "Stay in the lane and move to the right portion of the lane", letter: "b" },
+        { text: "Turn on the left signal and stay in the lane", letter: "c" },
+        { text: "Turn on the right signal and drive in the parking lane", letter: "d" }
+    ],
+    correctAnswer: "b",
+    explanation: "When another vehicle is passing, move to the right side of your lane to provide additional space and avoid interfering with the passing vehicle.",
+    reference: "Alberta Driver's Guide – Passing and Sharing the Road."
+},
+// More questions...
+];
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+function loadQuestions() {
+
+    shuffle(allQuestions);
+
+    currentQuestions = allQuestions.slice(0, 30);
+
+    const form = document.getElementById('exam-form');
+
+    form.innerHTML = '';
+
+    currentQuestions.forEach((question, index) => {
+
+        const questionDiv = document.createElement("div");
+
+        questionDiv.className = "question";
+
+        questionDiv.innerHTML =
+            `<p><strong>${index + 1}. ${question.text}</strong></p>` +
+
+            question.answers.map(answer =>
+
+            `<label>
+
+                <input type="radio" name="q${index}" value="${answer.letter}">
+
+                ${answer.letter}. ${answer.text}
+
+            </label>`
+
+            ).join("");
+
+        if (question.image) {
+
+            const img = document.createElement("img");
+
+            img.src = question.image;
+
+            img.alt = "";
+
+            img.className = "question-image";
+
+            questionDiv.appendChild(img);
+
+        }
+
+        form.appendChild(questionDiv);
+
+    });
+
+}
+
+function submitExam() {
+
+    const questions = document.querySelectorAll(".question");
+
+    let score = 0;
+
+    questions.forEach((questionDiv, index) => {
+
+        const question = currentQuestions[index];
+
+        const selectedAnswer = document.querySelector(`input[name="q${index}"]:checked`);
+
+        questionDiv.querySelectorAll("label").forEach(label => {
+
+            const input = label.querySelector("input");
+
+            if (input.value === question.correctAnswer)
+
+                label.classList.add("correct");
+
+            if (selectedAnswer && input.value === selectedAnswer.value) {
+
+                if (input.value !== question.correctAnswer)
+
+                    label.classList.add("incorrect");
+
+            }
+
+        });
+
+        if (selectedAnswer && selectedAnswer.value === question.correctAnswer)
+
+            score++;
+
+        const correct = question.answers.find(a => a.letter === question.correctAnswer);
+
+        const explanation = document.createElement("div");
+
+        explanation.className = "explanation-box";
+
+        explanation.innerHTML =
+
+            `<div class="answer-title">
+
+            ✔ Correct Answer:
+
+            ${correct.letter.toUpperCase()}. ${correct.text}
+
+            </div>
+
+            <div>
+
+            ${question.explanation ?? "Explanation coming soon."}
+
+            </div>
+
+            <div class="reference">
+
+            ${question.reference ?? ""}
+
+            </div>`;
+
+        questionDiv.appendChild(explanation);
+
+    });
+
+    const passingScore = Math.ceil(currentQuestions.length * 0.8);
+
+    document.getElementById("result").innerHTML =
+
+        `You scored <strong>${score}</strong> out of ${currentQuestions.length}<br><br>
+
+        <span style="font-size:22px">
+
+        ${(score >= passingScore)
+
+            ? "✅ PASS"
+
+            : "❌ FAIL"}
+
+        </span>`;
+
+}
+
+        window.onload = loadQuestions;
+    </script>
+</body>
+</html>
