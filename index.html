@@ -76,8 +76,11 @@
     <button type="button" onclick="submitExam()">Submit Exam</button>
     <div id="result" class="result"></div>
 
+    <div id="exam-options" style="margin-top:20px;"></div>
+
     <script>
         let currentQuestions = [];
+        let wrongQuestions = [];
 
         const allQuestions = [
             // Include your questions here
@@ -1353,43 +1356,89 @@
 // More questions...
 ];
 
-        function shuffle(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+
+function loadQuestions(mode = "random") {
+
+    let questionPool;
+
+
+    if (mode === "wrong" && wrongQuestions.length > 0) {
+
+        questionPool = [...wrongQuestions];
+
+
+        // If fewer than 30 wrong questions exist, fill the rest randomly
+        if (questionPool.length < 30) {
+
+            const remaining = allQuestions.filter(
+                q => !wrongQuestions.includes(q)
+            );
+
+
+            shuffle(remaining);
+
+
+            questionPool = questionPool.concat(
+                remaining.slice(0, 30 - questionPool.length)
+            );
+
         }
 
-function loadQuestions() {
 
-    shuffle(allQuestions);
+    } else {
 
-    currentQuestions = allQuestions.slice(0, 30);
+        questionPool = [...allQuestions];
 
-    const form = document.getElementById('exam-form');
+    }
 
-    form.innerHTML = '';
+
+    shuffle(questionPool);
+
+
+    currentQuestions = questionPool.slice(0, 30);
+
+
+    const form = document.getElementById("exam-form");
+
+    form.innerHTML = "";
+
+
+    document.getElementById("result").innerHTML = "";
+
+    document.getElementById("exam-options").innerHTML = "";
+
 
     currentQuestions.forEach((question, index) => {
+
 
         const questionDiv = document.createElement("div");
 
         questionDiv.className = "question";
 
+
         questionDiv.innerHTML =
+
             `<p><strong>${index + 1}. ${question.text}</strong></p>` +
 
             question.answers.map(answer =>
 
-            `<label>
+                `<label>
 
-                <input type="radio" name="q${index}" value="${answer.letter}">
+                    <input type="radio" name="q${index}" value="${answer.letter}">
 
-                ${answer.letter}. ${answer.text}
+                    ${answer.letter}. ${answer.text}
 
-            </label>`
+                </label>`
 
             ).join("");
+
 
         if (question.image) {
 
@@ -1401,9 +1450,11 @@ function loadQuestions() {
 
             img.className = "question-image";
 
+
             questionDiv.appendChild(img);
 
         }
+
 
         form.appendChild(questionDiv);
 
@@ -1411,75 +1462,122 @@ function loadQuestions() {
 
 }
 
+
+
 function submitExam() {
+
+    if (document.querySelector(".explanation-box")) {
+        return;
+    }
 
     const questions = document.querySelectorAll(".question");
 
+
     let score = 0;
+
+
+    wrongQuestions = [];
+
 
     questions.forEach((questionDiv, index) => {
 
+
         const question = currentQuestions[index];
 
-        const selectedAnswer = document.querySelector(`input[name="q${index}"]:checked`);
+
+        const selectedAnswer = document.querySelector(
+            `input[name="q${index}"]:checked`
+        );
+
 
         questionDiv.querySelectorAll("label").forEach(label => {
 
+
             const input = label.querySelector("input");
 
-            if (input.value === question.correctAnswer)
+
+            if (input.value === question.correctAnswer) {
 
                 label.classList.add("correct");
 
+            }
+
+
             if (selectedAnswer && input.value === selectedAnswer.value) {
 
-                if (input.value !== question.correctAnswer)
+
+                if (input.value !== question.correctAnswer) {
 
                     label.classList.add("incorrect");
+
+                }
 
             }
 
         });
 
-        if (selectedAnswer && selectedAnswer.value === question.correctAnswer)
+
+
+        if (selectedAnswer && selectedAnswer.value === question.correctAnswer) {
 
             score++;
 
-        const correct = question.answers.find(a => a.letter === question.correctAnswer);
+        } else {
+
+            wrongQuestions.push(question);
+
+        }
+
+
+
+        const correct = question.answers.find(
+            a => a.letter === question.correctAnswer
+        );
+
 
         const explanation = document.createElement("div");
 
+
         explanation.className = "explanation-box";
+
 
         explanation.innerHTML =
 
             `<div class="answer-title">
 
-            ✔ Correct Answer:
+                ✔ Correct Answer:
 
-            ${correct.letter.toUpperCase()}. ${correct.text}
+                ${correct.letter.toUpperCase()}. ${correct.text}
 
             </div>
 
             <div>
 
-            ${question.explanation ?? "Explanation coming soon."}
+                ${question.explanation ?? "Explanation coming soon."}
 
             </div>
 
             <div class="reference">
 
-            ${question.reference ?? ""}
+                ${question.reference ?? ""}
 
             </div>`;
 
+
+
         questionDiv.appendChild(explanation);
+
 
     });
 
+
+
     const passingScore = Math.ceil(currentQuestions.length * 0.8);
 
+
+
     document.getElementById("result").innerHTML =
+
 
         `You scored <strong>${score}</strong> out of ${currentQuestions.length}<br><br>
 
@@ -1493,9 +1591,41 @@ function submitExam() {
 
         </span>`;
 
+
+
+    document.getElementById("exam-options").innerHTML =
+
+
+        `
+
+        <br>
+
+        <button onclick="loadQuestions('random')">
+
+            🔄 Take Another Random 30 Question Exam
+
+        </button>
+
+
+        <br><br>
+
+
+        <button onclick="loadQuestions('wrong')"
+
+        ${wrongQuestions.length === 0 ? "disabled" : ""}>
+
+            ❌ Practice Wrong Answers (${wrongQuestions.length})
+
+        </button>
+
+        `;
+
 }
 
-        window.onload = loadQuestions;
+
+
+window.onload = loadQuestions;
+
     </script>
 </body>
 </html>
